@@ -45,8 +45,11 @@ VAR First1Date = CALCULATE(MIN(fact_chart_entries[date]), fact_chart_entries[pos
 RETURN IF(ISBLANK(First1Date), BLANK(), DATEDIFF(ReleaseDate, First1Date, DAY))
 
 💻 Tech Stack
+
 Business Intelligence: Microsoft Power BI Desktop
+
 Language: DAX (Data Analysis Expressions), Python
+
 Design & UI: Figma Custom UI Template
 
 * **Total Chart Entries:**
