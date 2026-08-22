@@ -1,101 +1,54 @@
-# 🎵 Spotify Top-50 Global Charts: End-to-End Analytics & Power BI Dashboard
+# 🎵 Spotify Chart & Playlist Analytics Dashboard | Power BI
 
-An end-to-end data intelligence project tracking and analyzing daily Spotify Top-50 Global chart positions (27,800 observations across 817 distinct tracks). The project features an automated Python/PostgreSQL ETL pipeline hosted on Supabase and an interactive Spotify Dark Mode Power BI dashboard.
-
----
-
-## 📸 Dashboard Visual Showcase
-
-| Navigation Landing Hub | Executive Overview & KPI Hub |
-|:---:|:---:|
-| ![Spotify Cover](assets/screenshots/cover_page.png) | ![Executive Overview](assets/screenshots/overview.png) |
-| *Custom dark aesthetic UI with native navigation* | *High-level chart metrics, artist rankings & filter pane* |
-
-| Song Longevity & Velocity | Content Type & Release Trends |
-|:---:|:---:|
-| ![Song Lifecycle](assets/screenshots/lifecycle_trends.png) | ![Content Analysis](assets/screenshots/content_trends.png) |
-| *Days charted leaders & Days-to-#1 scatter matrix* | *Singles vs. Albums ratio & explicit content divergence* |
+A comprehensive, interactive multi-page Power BI dashboard designed with an authentic Spotify dark theme UI. This dashboard tracks global chart entries, artist performance metrics, song lifecycle longevity, content trends, and seasonal charting behaviors.
 
 ---
 
-## 📌 Architecture & Data Pipeline
+## 📸 Dashboard Preview
 
-```plaintext
-Raw Spotify Top-50 Snapshots (27,800 Rows)
-                    │
-                    ▼
- Python ETL Pipeline (Data Cleaning, Imputation & Normalization)
-                    │
-                    ▼
- Supabase Cloud Database (PostgreSQL 3-Table Star Schema)
-                    │
-                    ▼
- Power BI Calculation Engine (DAX Measures & Time Intelligence)
-                    │
-                    ▼
- Custom Dark-Theme Interactive Analytics Dashboard
+| Home Page | Overview Page |
+|:---:|:---:|
+| <img src="Screenshots/Screenshot 2026-08-22 235601.png" width="450"/> | <img src="Screenshots/Screenshot 2026-08-22 235615.png" width="450"/> |
 
-┌─────────────────────────┐
-      │        dim_dates        │
-      ├─────────────────────────┤
-      │ date (PK)               │
-      │ year, month, year_month │
-      │ weekday_name            │
-      └────────────┬────────────┘
-                   │ 1
-                   │
-                   │ *
-      ┌────────────┴────────────┐            ┌─────────────────────────┐
-      │   fact_chart_entries    │ *        1 │        dim_songs        │
-      ├─────────────────────────┤────────────┤─────────────────────────┤
-      │ entry_id (PK)           │            │ song_key (PK)           │
-      │ date (FK)               │            │ song, artist            │
-      │ song_key (FK)           │            │ album_type, total_tracks│
-      │ position, days_charted  │            │ is_explicit, duration_ms│
-      └─────────────────────────┘            └─────────────────────────┘
+| Artists Analysis | Song Lifecycle |
+|:---:|:---:|
+| <img src="Screenshots/Screenshot 2026-08-22 235623.png" width="450"/> | <img src="Screenshots/Screenshot 2026-08-22 235632.png" width="450"/> |
 
-// Total Chart Observations
-Total Chart Entries = COUNTROWS(fact_chart_entries)
+| Content Trends | Seasonality & Details |
+|:---:|:---:|
+| <img src="Screenshots/Screenshot 2026-08-22 235640.png" width="450"/> | <img src="Screenshots/Screenshot 2026-08-22 235646.png" width="450"/> |
 
-// Distinct Track Count
-Distinct Songs = DISTINCTCOUNT(dim_songs[song_key])
+---
 
-// Singles Proportion Metric
-Pct Singles = 
-DIVIDE(
-    CALCULATE([Distinct Songs], dim_songs[album_type] = "single"),
-    [Distinct Songs],
-    0
-)
+## 🚀 Key Features & Pages
 
-// Song Longevity Peak
-Days Charted Max = MAX(fact_chart_entries[days_charted])
+* **Home:** Sleek landing page with custom Spotify UI navigation buttons.
+* **Overview:** High-level summary of total chart entries, distinct artists/songs, monthly slicers, and weekday distributions.
+* **Artists Performance:** Breakdown of Top 10 artists by entries, dominance share, and average popularity trends over time.
+* **Song Lifecycle:** Longevity leaders (Days charted), fastest climbs to #1 rank, and song duration analytics.
+* **Trends (Content & Formats):** Explicit vs Non-explicit content distribution, singles vs album release ratios over time.
+* **Details (Seasonality & Charts):** Year-over-year popularity growth, day-of-week debut analysis, and weekend entry counts.
 
-// Days to Rank #1 Velocity
+---
+
+## 🛠️ Data Model & DAX Measures
+
+### Key DAX Measures Used:
+
+Pct Explicit = DIVIDE(CALCULATE(COUNTROWS(fact_chart_entries), dim_songs[is_explicit] = TRUE()), COUNTROWS(fact_chart_entries))
+
+Pct Singles = DIVIDE(CALCULATE(COUNTROWS(fact_chart_entries), dim_songs[album_type] = "single"), COUNTROWS(fact_chart_entries))
+
 Days to No1 = 
 VAR ReleaseDate = MIN(dim_songs[release_date_cleaned])
-VAR FirstNo1Date = CALCULATE(MIN(fact_chart_entries[date]), fact_chart_entries[position] = 1)
-RETURN
-    IF(ISBLANK(FirstNo1Date), BLANK(), DATEDIFF(ReleaseDate, FirstNo1Date, DAY))
+VAR First1Date = CALCULATE(MIN(fact_chart_entries[date]), fact_chart_entries[position] = 1)
+RETURN IF(ISBLANK(First1Date), BLANK(), DATEDIFF(ReleaseDate, First1Date, DAY))
 
-spotify-top50-powerbi-analytics/
-├── assets/
-│   ├── backgrounds/
-│   │   ├── cover_bg.jpg
-│   │   └── dashboard_grid_bg.jpg
-│   └── screenshots/
-│       ├── cover_page.png
-│       ├── overview.png
-│       ├── lifecycle_trends.png
-│       └── content_trends.png
-├── data/
-│   └── spotify-top-50-world.csv
-├── dax/
-│   └── Measures_Details.txt
-├── notebooks/
-│   └── Spotify_Project_EDA.ipynb
-├── powerbi/
-│   └── SpotifyPlaylistAnalysisProject.pbix
-├── .gitignore
-├── README.md
-└── requirements.txt
+💻 Tech Stack
+Business Intelligence: Microsoft Power BI Desktop
+Language: DAX (Data Analysis Expressions), Python
+Design & UI: Figma Custom UI Template
+
+* **Total Chart Entries:**
+```dax
+Total Chart Entries = COUNTROWS(fact_chart_entries)
