@@ -1,0 +1,496 @@
+=============================================================================
+SPOTIFY TOP-50-WORLD — MEASURES DETAILS (Hinglish Version)
+46 measures, numbered, sirf purpose aur syntax ke saath.
+Tables referenced: dim_songs, dim_dates, fact_chart_entries
+=============================================================================
+
+
+=============================================================================
+CATEGORY 1: OVERALL DATASET STATS
+=============================================================================
+
+
+1. Total Songs
+
+Purpose: Current filter context me total chart entries (rows) ki ginti.
+Note: yeh chart-entry days count karta hai, distinct songs nahi — jo song
+50 din chart me raha, woh is count me 50 baar contribute karega.
+
+Syntax:
+Total Songs = COUNTROWS(fact_chart_entries)
+
+
+2. Distinct Songs
+
+Purpose: Sirf distinct song TITLES ki count, artist ko ignore karke. Do
+alag artists ke ek jaise-titled songs ko bhi ek hi count karta hai.
+
+Syntax:
+Distinct Songs = DISTINCTCOUNT(fact_chart_entries[song])
+
+
+3. Distinct Artists
+
+Purpose: Current filter context me present unique artists ki count.
+
+Syntax:
+Distinct Artists = DISTINCTCOUNT(fact_chart_entries[artist])
+
+
+4. Avg Popularity
+
+Purpose: Current filter context ki chart entries ka average Spotify
+popularity score.
+
+Syntax:
+Avg Popularity = AVERAGE(fact_chart_entries[popularity])
+
+
+5. Max Popularity
+
+Purpose: Current filter context me present sabse highest popularity score.
+
+Syntax:
+Max Popularity = MAX(fact_chart_entries[popularity])
+
+
+6. Min Popularity
+
+Purpose: Current filter context me present sabse lowest popularity score.
+
+Syntax:
+Min Popularity = MIN(fact_chart_entries[popularity])
+
+
+=============================================================================
+CATEGORY 2: DURATION
+=============================================================================
+
+
+7. Avg Duration Minutes
+
+Purpose: Average song length, milliseconds se minutes me convert kiya
+gaya. Yeh ek song-level attribute hai (dim_songs par rehta hai), isliye
+yeh jo bhi songs context me hain unhe reflect karta hai — chart-day counts
+ko nahi.
+
+Syntax:
+Avg Duration Minutes = AVERAGE(dim_songs[duration_ms]) / 60000
+
+
+8. Max Duration Minutes
+
+Purpose: Current filter context me present sabse lambi song duration,
+minutes me.
+
+Syntax:
+Max Duration Minutes = MAX(dim_songs[duration_ms]) / 60000
+
+
+9. Min Duration Minutes
+
+Purpose: Current filter context me present sabse chhoti song duration,
+minutes me.
+
+Syntax:
+Min Duration Minutes = MIN(dim_songs[duration_ms]) / 60000
+
+
+=============================================================================
+CATEGORY 3: EXPLICIT CONTENT
+=============================================================================
+
+
+10. Explicit Songs
+
+Purpose: Un chart entries ki count jinke underlying song explicit tagged
+hain. dim_songs -> fact_chart_entries relationship ke through filter
+karta hai.
+
+Syntax:
+Explicit Songs = CALCULATE(COUNTROWS(fact_chart_entries), dim_songs[is_explicit] = TRUE())
+
+
+11. Non-Explicit Songs
+
+Purpose: Un chart entries ki count jinke underlying song explicit tagged
+nahi hain.
+
+Syntax:
+Non-Explicit Songs = CALCULATE(COUNTROWS(fact_chart_entries), dim_songs[is_explicit] = FALSE())
+
+
+12. Pct Explicit Songs
+
+Purpose: Current context ki saari chart entries me se explicit-tagged
+entries ka share — 0 aur 1 ke beech ek proportion ki tarah.
+
+Syntax:
+Pct Explicit Songs = DIVIDE([Explicit Songs], [Total Songs], 0)
+
+
+13. Avg Popularity Explicit
+
+Purpose: Sirf explicit-tagged chart entries ka average popularity score.
+
+Syntax:
+Avg Popularity Explicit = CALCULATE(AVERAGE(fact_chart_entries[popularity]), dim_songs[is_explicit] = TRUE())
+
+
+14. Avg Popularity NonExplicit
+
+Purpose: Sirf non-explicit chart entries ka average popularity score.
+
+Syntax:
+Avg Popularity NonExplicit = CALCULATE(AVERAGE(fact_chart_entries[popularity]), dim_songs[is_explicit] = FALSE())
+
+
+=============================================================================
+CATEGORY 4: CHART POSITION
+=============================================================================
+
+
+15. Avg Position
+
+Purpose: Current filter context ki chart entries ka average chart
+position (1 se 50 tak). Kam number ka matlab hai behtar average position.
+
+Syntax:
+Avg Position = AVERAGE(fact_chart_entries[position])
+
+
+16. Position 1 Songs
+
+Purpose: Un chart-entry days ki count jab koi song #1 spot par tha.
+
+Syntax:
+Position 1 Songs = CALCULATE(COUNTROWS(fact_chart_entries), fact_chart_entries[position] = 1)
+
+
+17. Position 1 Artists
+
+Purpose: Current filter context me, kabhi bhi #1 spot par rahe artists ki
+distinct count.
+
+Syntax:
+Position 1 Artists = CALCULATE(DISTINCTCOUNT(fact_chart_entries[artist]), fact_chart_entries[position] = 1)
+
+
+=============================================================================
+CATEGORY 5: ALBUM / RELEASE FORMAT
+=============================================================================
+
+
+18. Avg Tracks per Album
+
+Purpose: Current filter context me, parent album ya single par average
+kitne tracks hain, per song.
+
+Syntax:
+Avg Tracks per Album = AVERAGE(dim_songs[total_tracks])
+
+
+19. Album Type Count
+
+Purpose: Distinct album_type values ki sankhya. Poore dataset me 2 expected
+hain ("single" aur "album") — mainly ek data-quality sanity check ki
+tarah useful hai, analytical figure ki tarah nahi.
+
+Syntax:
+Album Type Count = DISTINCTCOUNT(dim_songs[album_type])
+
+
+20. Singles Count
+
+Purpose: Singles ki tarah release hue songs se belong karne wali chart
+entries ki count.
+
+Syntax:
+Singles Count = CALCULATE(COUNTROWS(fact_chart_entries), dim_songs[album_type] = "single")
+
+
+21. Albums Count
+
+Purpose: Full album ka part hokar release hue songs se belong karne wali
+chart entries ki count.
+
+Syntax:
+Albums Count = CALCULATE(COUNTROWS(fact_chart_entries), dim_songs[album_type] = "album")
+
+
+22. Pct Singles
+
+Purpose: Current context ki saari chart entries me se, albums ke bajaye
+singles se aayi entries ka share.
+
+Syntax:
+Pct Singles = DIVIDE([Singles Count], [Total Songs])
+
+
+=============================================================================
+CATEGORY 6: ARTIST-SCOPED
+=============================================================================
+Yeh measures ek specific artist context me evaluate hone ke liye bane hain
+(row, filter, ya slicer selection ke through). Kuch measures upar wale
+unscoped measures se same formula share karte hain — sirf clarity ke liye
+alag naam diya gaya hai.
+
+
+23. Songs per Artist
+
+Purpose: Ek given artist se attribute hui chart entries. [Total Songs] se
+identical formula hai; alag naam sirf clarity ke liye hai jab Artist active
+context ho.
+
+Syntax:
+Songs per Artist = COUNTROWS(fact_chart_entries)
+
+
+24. Distinct Songs per Artist
+
+Purpose: Ek given artist ne (safe song_key identifier use karke, raw title
+nahi) kitne distinct songs chart kiye hain.
+
+Syntax:
+Distinct Songs per Artist = DISTINCTCOUNT(fact_chart_entries[song_key])
+
+
+25. Avg Popularity per Artist
+
+Purpose: Ek given artist ki chart entries ka average popularity score.
+[Avg Popularity] se identical formula hai; clarity ke liye alag naam.
+
+Syntax:
+Avg Popularity per Artist = AVERAGE(fact_chart_entries[popularity])
+
+
+26. Position1 Hits per Artist
+
+Purpose: Ek given artist ke #1 chart-entry days ki count. [Position 1
+Songs] se identical formula hai; clarity ke liye alag naam.
+
+Syntax:
+Position1 Hits per Artist = CALCULATE(COUNTROWS(fact_chart_entries), fact_chart_entries[position] = 1)
+
+
+27. Artist Rank by Chart Entries
+
+Purpose: Total chart entries ke hisaab se har artist ka numeric rank,
+highest pehle. RANKX demonstrate karta hai — har artist par iterate karke,
+har ek ka [Songs per Artist] value doosron se compare karta hai.
+
+Syntax:
+Artist Rank by Chart Entries = RANKX(ALL(dim_songs[artist]), [Songs per Artist], , DESC)
+
+
+28. Top 10 Artist Entries
+
+Purpose: Sirf top 10 sabse zyada chart karne wale artists ki combined
+chart-entry count. TOPN demonstrate karta hai — aggregate karne se pehle
+table ka top-ranked subset select karta hai.
+
+Syntax:
+Top 10 Artist Entries = CALCULATE([Total Songs], TOPN(10, ALL(dim_songs[artist]), [Songs per Artist], DESC))
+
+
+29. Pct of All Entries by Artist
+
+Purpose: Kisi bhi doosre active filter ki parwaah kiye bina, ek given
+artist ka har kabhi record hui chart entry me share. ALL() ko poore-table
+level par demonstrate karta hai, dim_songs ke sirf ek column ke bajaye
+saare filters ek saath hata deta hai.
+
+Syntax:
+Pct of All Entries by Artist = DIVIDE([Songs per Artist], CALCULATE([Total Songs], ALL(dim_songs)))
+
+
+=============================================================================
+CATEGORY 7: TIME-SCOPED
+=============================================================================
+Ek specific Year ya Month (dim_dates se) context me evaluate hone ke liye
+bane hain.
+
+
+30. Songs per Year
+
+Purpose: Ek given saal ke andar ki chart entries. [Total Songs] se
+identical formula hai; clarity ke liye alag naam.
+
+Syntax:
+Songs per Year = COUNTROWS(fact_chart_entries)
+
+
+31. Avg Popularity per Year
+
+Purpose: Ek given saal ke andar ka average popularity score. [Avg
+Popularity] se identical formula hai; clarity ke liye alag naam.
+
+Syntax:
+Avg Popularity per Year = AVERAGE(fact_chart_entries[popularity])
+
+
+32. Avg Duration per Year
+
+Purpose: Ek given saal ke andar chart karne wale songs ka average
+duration, minutes me.
+
+Syntax:
+Avg Duration per Year = AVERAGE(dim_songs[duration_ms]) / 60000
+
+
+33. Pct Explicit per Year
+
+Purpose: Ek given saal ke andar, explicit-tagged chart entries ka share.
+
+Syntax:
+Pct Explicit per Year = DIVIDE(CALCULATE(COUNTROWS(fact_chart_entries), dim_songs[is_explicit] = TRUE()), [Songs per Year], 0)
+
+
+34. Pct Explicit per Month
+
+Purpose: [Pct Explicit per Year] jaisi hi calculation, sirf yearly ke
+bajaye monthly grain par.
+
+Syntax:
+Pct Explicit per Month = DIVIDE(CALCULATE(COUNTROWS(fact_chart_entries), dim_songs[is_explicit] = TRUE()), COUNTROWS(fact_chart_entries))
+
+
+35. Weekend Entries Count
+
+Purpose: Saturday ya Sunday ko aane wali chart entries. FILTER()
+demonstrate karta hai, dim_dates ko row-by-row ek condition ke against
+evaluate karte hue. weekday_num convention: Monday=1 se Sunday=7 tak, toh
+weekend = {6, 7}.
+
+Syntax:
+Weekend Entries Count = CALCULATE(COUNTROWS(fact_chart_entries), FILTER(dim_dates, dim_dates[weekday_num] IN {6, 7}))
+
+
+=============================================================================
+CATEGORY 8: SONG LIFECYCLE
+=============================================================================
+Ek specific Song (song_key) context me evaluate hone ke liye bane hain.
+
+
+36. Days Charted
+
+Purpose: Ek given song ne total kitne dinon tak chart par kahin bhi
+appear kiya — zaroori nahi ki consecutively. [Total Songs] se identical
+formula hai; clarity ke liye alag naam.
+
+Syntax:
+Days Charted = COUNTROWS(fact_chart_entries)
+
+
+37. Days to No1
+
+Purpose: Ek song ke release date aur usne pehli baar position 1 hit karne
+ki date ke beech ka gap, days me. Jo songs kabhi #1 nahi bane, unke liye
+BLANK() return karta hai, ek misleading zero ya negative value ke bajaye.
+
+Syntax:
+Days to No1 =
+    VAR ReleaseDate = MIN(dim_songs[release_date_cleaned])
+    VAR First1Date = CALCULATE(MIN(fact_chart_entries[date]), fact_chart_entries[position] = 1)
+    RETURN IF(ISBLANK(First1Date), BLANK(), DATEDIFF(ReleaseDate, First1Date, DAY))
+
+
+38. Peak Position
+
+Purpose: Ek given song ne kabhi bhi jo best (sabse kam number wala) chart
+position paaya.
+
+Syntax:
+Peak Position = MIN(fact_chart_entries[position])
+
+
+39. First Chart Date
+
+Purpose: Jis earliest date ko ek given song chart par appear hua.
+
+Syntax:
+First Chart Date = MIN(fact_chart_entries[date])
+
+
+40. Last Chart Date
+
+Purpose: Jis most recent date ko ek given song chart par appear hua.
+
+Syntax:
+Last Chart Date = MAX(fact_chart_entries[date])
+
+
+41. Avg Days Since Release at Charting
+
+Purpose: Average kitne dinon baad release ke, koi song usually chart kar
+raha hota hai. Notebook me banaye gaye days_since_release calculated
+column se seedha read karta hai.
+
+Syntax:
+Avg Days Since Release at Charting = AVERAGE(fact_chart_entries[days_since_release])
+
+
+42. New Entries Count
+
+Purpose: Un chart entries ki count jo kisi song ki chart par bilkul pehli
+appearance thi. Notebook me banaye gaye is_new_entry calculated column
+se seedha read karta hai.
+
+Syntax:
+New Entries Count = CALCULATE(COUNTROWS(fact_chart_entries), fact_chart_entries[is_new_entry] = TRUE())
+
+
+43. Distinct Song-Artist Combos
+
+Purpose: Accurate distinct-song count, safe song_key identifier (song +
+artist combine kiya hua) use karke, sirf raw song title ke bajaye.
+
+Syntax:
+Distinct Song-Artist Combos = DISTINCTCOUNT(fact_chart_entries[song_key])
+
+
+=============================================================================
+CATEGORY 9: POSITION VOLATILITY
+=============================================================================
+Ek specific Song context me evaluate hone ke liye bane hain.
+
+
+44. Position Range
+
+Purpose: Ek given song ke poore charting run me, uske best aur worst
+chart position ke beech ka spread.
+
+Syntax:
+Position Range = MAX(fact_chart_entries[position]) - MIN(fact_chart_entries[position])
+
+
+45. Position StdDev
+
+Purpose: Ek given song ki daily chart position ka standard deviation — uska
+run kitna volatile tha, sirf best-to-worst range se aage. STDEV.P
+demonstrate karta hai: population standard deviation, jo yahan appropriate
+hai kyunki humare paas har song ke chart-days ka poora set hai, sample
+nahi.
+
+Syntax:
+Position StdDev = STDEV.P(fact_chart_entries[position])
+
+
+=============================================================================
+CATEGORY 10: GENERAL
+=============================================================================
+
+
+46. Popularity Std Dev
+
+Purpose: Current filter context me popularity scores ka standard deviation
+— popularity values kitne spread out hain, [Position StdDev] wali hi
+STDEV.P logic use karte hue.
+
+Syntax:
+Popularity Std Dev = STDEV.P(fact_chart_entries[popularity])
+
+
+=============================================================================
+END OF FILE — 46 measures total
+=============================================================================

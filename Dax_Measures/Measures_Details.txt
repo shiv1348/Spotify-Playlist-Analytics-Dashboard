@@ -1,0 +1,499 @@
+=============================================================================
+SPOTIFY TOP-50-WORLD — MEASURES DETAILS
+46 measures, numbered, with purpose and syntax only.
+Tables referenced: dim_songs, dim_dates, fact_chart_entries
+=============================================================================
+
+
+=============================================================================
+CATEGORY 1: OVERALL DATASET STATS
+=============================================================================
+
+
+1. Total Songs
+
+Purpose: The total number of chart entries (rows) in the current filter
+context. Note this counts chart-entry days, not distinct songs — a song
+that charted for 50 days contributes 50 to this count.
+
+Syntax:
+Total Songs = COUNTROWS(fact_chart_entries)
+
+
+2. Distinct Songs
+
+Purpose: The count of distinct song TITLES only, ignoring artist. Counts
+two different songs with the identical title as one, even if performed by
+two different artists.
+
+Syntax:
+Distinct Songs = DISTINCTCOUNT(fact_chart_entries[song])
+
+
+3. Distinct Artists
+
+Purpose: The count of unique artists present in the current filter
+context.
+
+Syntax:
+Distinct Artists = DISTINCTCOUNT(fact_chart_entries[artist])
+
+
+4. Avg Popularity
+
+Purpose: The average Spotify popularity score across chart entries in the
+current filter context.
+
+Syntax:
+Avg Popularity = AVERAGE(fact_chart_entries[popularity])
+
+
+5. Max Popularity
+
+Purpose: The single highest popularity score present in the current filter
+context.
+
+Syntax:
+Max Popularity = MAX(fact_chart_entries[popularity])
+
+
+6. Min Popularity
+
+Purpose: The single lowest popularity score present in the current filter
+context.
+
+Syntax:
+Min Popularity = MIN(fact_chart_entries[popularity])
+
+
+=============================================================================
+CATEGORY 2: DURATION
+=============================================================================
+
+
+7. Avg Duration Minutes
+
+Purpose: The average song length, converted from milliseconds to minutes.
+This is a song-level attribute (lives on dim_songs), so it reflects
+whichever songs are in context — not chart-day counts.
+
+Syntax:
+Avg Duration Minutes = AVERAGE(dim_songs[duration_ms]) / 60000
+
+
+8. Max Duration Minutes
+
+Purpose: The longest song duration present in the current filter context,
+in minutes.
+
+Syntax:
+Max Duration Minutes = MAX(dim_songs[duration_ms]) / 60000
+
+
+9. Min Duration Minutes
+
+Purpose: The shortest song duration present in the current filter context,
+in minutes.
+
+Syntax:
+Min Duration Minutes = MIN(dim_songs[duration_ms]) / 60000
+
+
+=============================================================================
+CATEGORY 3: EXPLICIT CONTENT
+=============================================================================
+
+
+10. Explicit Songs
+
+Purpose: The count of chart entries where the underlying song is tagged
+explicit. Filters through the dim_songs -> fact_chart_entries relationship.
+
+Syntax:
+Explicit Songs = CALCULATE(COUNTROWS(fact_chart_entries), dim_songs[is_explicit] = TRUE())
+
+
+11. Non-Explicit Songs
+
+Purpose: The count of chart entries where the underlying song is not
+tagged explicit.
+
+Syntax:
+Non-Explicit Songs = CALCULATE(COUNTROWS(fact_chart_entries), dim_songs[is_explicit] = FALSE())
+
+
+12. Pct Explicit Songs
+
+Purpose: The share of all chart entries, in the current context, that are
+explicit-tagged — expressed as a proportion between 0 and 1.
+
+Syntax:
+Pct Explicit Songs = DIVIDE([Explicit Songs], [Total Songs], 0)
+
+
+13. Avg Popularity Explicit
+
+Purpose: The average popularity score among explicit-tagged chart entries
+only.
+
+Syntax:
+Avg Popularity Explicit = CALCULATE(AVERAGE(fact_chart_entries[popularity]), dim_songs[is_explicit] = TRUE())
+
+
+14. Avg Popularity NonExplicit
+
+Purpose: The average popularity score among non-explicit chart entries
+only.
+
+Syntax:
+Avg Popularity NonExplicit = CALCULATE(AVERAGE(fact_chart_entries[popularity]), dim_songs[is_explicit] = FALSE())
+
+
+=============================================================================
+CATEGORY 4: CHART POSITION
+=============================================================================
+
+
+15. Avg Position
+
+Purpose: The average chart position (1 through 50) across chart entries in
+the current filter context. A lower number means a better average
+position.
+
+Syntax:
+Avg Position = AVERAGE(fact_chart_entries[position])
+
+
+16. Position 1 Songs
+
+Purpose: The count of chart-entry days where a song held the #1 spot.
+
+Syntax:
+Position 1 Songs = CALCULATE(COUNTROWS(fact_chart_entries), fact_chart_entries[position] = 1)
+
+
+17. Position 1 Artists
+
+Purpose: The distinct count of artists who have held the #1 spot at any
+point, in the current filter context.
+
+Syntax:
+Position 1 Artists = CALCULATE(DISTINCTCOUNT(fact_chart_entries[artist]), fact_chart_entries[position] = 1)
+
+
+=============================================================================
+CATEGORY 5: ALBUM / RELEASE FORMAT
+=============================================================================
+
+
+18. Avg Tracks per Album
+
+Purpose: The average number of tracks on the parent album or single, per
+song, in the current filter context.
+
+Syntax:
+Avg Tracks per Album = AVERAGE(dim_songs[total_tracks])
+
+
+19. Album Type Count
+
+Purpose: The number of distinct album_type values present. Expected to be
+2 ("single" and "album") across the whole dataset — mainly useful as a
+data-quality sanity check rather than an analytical figure.
+
+Syntax:
+Album Type Count = DISTINCTCOUNT(dim_songs[album_type])
+
+
+20. Singles Count
+
+Purpose: The count of chart entries belonging to songs released as
+singles.
+
+Syntax:
+Singles Count = CALCULATE(COUNTROWS(fact_chart_entries), dim_songs[album_type] = "single")
+
+
+21. Albums Count
+
+Purpose: The count of chart entries belonging to songs released as part
+of a full album.
+
+Syntax:
+Albums Count = CALCULATE(COUNTROWS(fact_chart_entries), dim_songs[album_type] = "album")
+
+
+22. Pct Singles
+
+Purpose: The share of all chart entries, in the current context, that came
+from singles rather than albums.
+
+Syntax:
+Pct Singles = DIVIDE([Singles Count], [Total Songs])
+
+
+=============================================================================
+CATEGORY 6: ARTIST-SCOPED
+=============================================================================
+These are intended to be evaluated with a specific artist in context (a
+row, a filter, or a slicer selection). Several share formulas with
+unscoped measures above — named separately purely for clarity.
+
+
+23. Songs per Artist
+
+Purpose: Chart entries attributed to a given artist. Identical formula to
+[Total Songs]; the separate name exists for clarity when Artist is the
+active context.
+
+Syntax:
+Songs per Artist = COUNTROWS(fact_chart_entries)
+
+
+24. Distinct Songs per Artist
+
+Purpose: How many distinct songs (using the safe song_key identifier, not
+raw title) a given artist has charted.
+
+Syntax:
+Distinct Songs per Artist = DISTINCTCOUNT(fact_chart_entries[song_key])
+
+
+25. Avg Popularity per Artist
+
+Purpose: Average popularity score for a given artist's chart entries.
+Identical formula to [Avg Popularity]; named separately for clarity.
+
+Syntax:
+Avg Popularity per Artist = AVERAGE(fact_chart_entries[popularity])
+
+
+26. Position1 Hits per Artist
+
+Purpose: Count of #1 chart-entry days for a given artist. Identical
+formula to [Position 1 Songs]; named separately for clarity.
+
+Syntax:
+Position1 Hits per Artist = CALCULATE(COUNTROWS(fact_chart_entries), fact_chart_entries[position] = 1)
+
+
+27. Artist Rank by Chart Entries
+
+Purpose: The numeric rank of each artist by total chart entries, highest
+first. Demonstrates RANKX — iterating over every artist and comparing each
+one's [Songs per Artist] value against the others.
+
+Syntax:
+Artist Rank by Chart Entries = RANKX(ALL(dim_songs[artist]), [Songs per Artist], , DESC)
+
+
+28. Top 10 Artist Entries
+
+Purpose: The combined chart-entry count across just the 10 highest-charting
+artists. Demonstrates TOPN, selecting the top-ranked subset of a table
+before aggregating.
+
+Syntax:
+Top 10 Artist Entries = CALCULATE([Total Songs], TOPN(10, ALL(dim_songs[artist]), [Songs per Artist], DESC))
+
+
+29. Pct of All Entries by Artist
+
+Purpose: A given artist's share of every chart entry ever recorded,
+regardless of any other active filter. Demonstrates ALL() at the
+whole-table level, removing every filter on dim_songs at once rather than
+just one column.
+
+Syntax:
+Pct of All Entries by Artist = DIVIDE([Songs per Artist], CALCULATE([Total Songs], ALL(dim_songs)))
+
+
+=============================================================================
+CATEGORY 7: TIME-SCOPED
+=============================================================================
+Intended to be evaluated with a specific Year or Month (from dim_dates)
+in context.
+
+
+30. Songs per Year
+
+Purpose: Chart entries within a given year. Identical formula to
+[Total Songs]; named separately for clarity.
+
+Syntax:
+Songs per Year = COUNTROWS(fact_chart_entries)
+
+
+31. Avg Popularity per Year
+
+Purpose: Average popularity score within a given year. Identical formula
+to [Avg Popularity]; named separately for clarity.
+
+Syntax:
+Avg Popularity per Year = AVERAGE(fact_chart_entries[popularity])
+
+
+32. Avg Duration per Year
+
+Purpose: Average song duration among songs charting within a given year,
+in minutes.
+
+Syntax:
+Avg Duration per Year = AVERAGE(dim_songs[duration_ms]) / 60000
+
+
+33. Pct Explicit per Year
+
+Purpose: The share of chart entries that are explicit-tagged, within a
+given year.
+
+Syntax:
+Pct Explicit per Year = DIVIDE(CALCULATE(COUNTROWS(fact_chart_entries), dim_songs[is_explicit] = TRUE()), [Songs per Year], 0)
+
+
+34. Pct Explicit per Month
+
+Purpose: The same calculation as [Pct Explicit per Year], at monthly grain
+instead of yearly.
+
+Syntax:
+Pct Explicit per Month = DIVIDE(CALCULATE(COUNTROWS(fact_chart_entries), dim_songs[is_explicit] = TRUE()), COUNTROWS(fact_chart_entries))
+
+
+35. Weekend Entries Count
+
+Purpose: Chart entries falling on a Saturday or Sunday. Demonstrates
+FILTER(), evaluating dim_dates row by row against a condition.
+weekday_num convention: Monday=1 through Sunday=7, so weekend = {6, 7}.
+
+Syntax:
+Weekend Entries Count = CALCULATE(COUNTROWS(fact_chart_entries), FILTER(dim_dates, dim_dates[weekday_num] IN {6, 7}))
+
+
+=============================================================================
+CATEGORY 8: SONG LIFECYCLE
+=============================================================================
+Intended to be evaluated with a specific Song (song_key) in context.
+
+
+36. Days Charted
+
+Purpose: The total number of days a given song appeared anywhere on the
+chart, not necessarily consecutively. Identical formula to [Total Songs];
+named separately for clarity.
+
+Syntax:
+Days Charted = COUNTROWS(fact_chart_entries)
+
+
+37. Days to No1
+
+Purpose: The number of days between a song's release date and the first
+date it reached position 1. Returns BLANK() for songs that never reached
+#1, rather than a misleading zero or negative value.
+
+Syntax:
+Days to No1 =
+    VAR ReleaseDate = MIN(dim_songs[release_date_cleaned])
+    VAR First1Date = CALCULATE(MIN(fact_chart_entries[date]), fact_chart_entries[position] = 1)
+    RETURN IF(ISBLANK(First1Date), BLANK(), DATEDIFF(ReleaseDate, First1Date, DAY))
+
+
+38. Peak Position
+
+Purpose: The best (lowest-numbered) chart position a given song ever
+reached.
+
+Syntax:
+Peak Position = MIN(fact_chart_entries[position])
+
+
+39. First Chart Date
+
+Purpose: The earliest date a given song appeared on the chart.
+
+Syntax:
+First Chart Date = MIN(fact_chart_entries[date])
+
+
+40. Last Chart Date
+
+Purpose: The most recent date a given song appeared on the chart.
+
+Syntax:
+Last Chart Date = MAX(fact_chart_entries[date])
+
+
+41. Avg Days Since Release at Charting
+
+Purpose: On average, how many days after its release date a song tends to
+be charting. Reads directly from the days_since_release calculated column
+built in the notebook.
+
+Syntax:
+Avg Days Since Release at Charting = AVERAGE(fact_chart_entries[days_since_release])
+
+
+42. New Entries Count
+
+Purpose: The count of chart entries that were a song's very first
+appearance on the chart. Reads directly from the is_new_entry calculated
+column built in the notebook.
+
+Syntax:
+New Entries Count = CALCULATE(COUNTROWS(fact_chart_entries), fact_chart_entries[is_new_entry] = TRUE())
+
+
+43. Distinct Song-Artist Combos
+
+Purpose: The accurate distinct-song count, using the safe song_key
+identifier (song + artist combined) rather than the raw song title alone.
+
+Syntax:
+Distinct Song-Artist Combos = DISTINCTCOUNT(fact_chart_entries[song_key])
+
+
+=============================================================================
+CATEGORY 9: POSITION VOLATILITY
+=============================================================================
+Intended to be evaluated with a specific Song in context.
+
+
+44. Position Range
+
+Purpose: The spread between a given song's best and worst chart position
+across its entire charting run.
+
+Syntax:
+Position Range = MAX(fact_chart_entries[position]) - MIN(fact_chart_entries[position])
+
+
+45. Position StdDev
+
+Purpose: The standard deviation of a given song's daily chart position —
+how volatile its run was, beyond just best-to-worst range. Demonstrates
+STDEV.P: population standard deviation, appropriate here since we hold the
+complete set of chart days for each song, not a sample of them.
+
+Syntax:
+Position StdDev = STDEV.P(fact_chart_entries[position])
+
+
+=============================================================================
+CATEGORY 10: GENERAL
+=============================================================================
+
+
+46. Popularity Std Dev
+
+Purpose: The standard deviation of popularity scores in the current filter
+context — how spread out popularity values are, using the same STDEV.P
+logic as [Position StdDev].
+
+Syntax:
+Popularity Std Dev = STDEV.P(fact_chart_entries[popularity])
+
+
+=============================================================================
+END OF FILE — 46 measures total
+=============================================================================
