@@ -8,15 +8,15 @@ A comprehensive, interactive multi-page Power BI dashboard designed with an auth
 
 | Home Page | Overview Page |
 |:---:|:---:|
-| ![Home](Screenshots/01_Home.png) | ![Overview](Screenshots/02_Overview.png) |
+| <img src="Screenshots/Screenshot 2026-08-22 235601.png" width="450"/> | <img src="Screenshots/Screenshot 2026-08-22 235615.png" width="450"/> |
 
 | Artists Analysis | Song Lifecycle |
 |:---:|:---:|
-| ![Artists](Screenshots/03_Artists.png) | ![Songs](Screenshots/04_Songs.png) |
+| <img src="Screenshots/Screenshot 2026-08-22 235623.png" width="450"/> | <img src="Screenshots/Screenshot 2026-08-22 235632.png" width="450"/> |
 
 | Content Trends | Seasonality & Details |
 |:---:|:---:|
-| ![Trends](Screenshots/05_Trends.png) | ![Details](Screenshots/06_Details.png) |
+| <img src="Screenshots/Screenshot 2026-08-22 235640.png" width="450"/> | <img src="Screenshots/Screenshot 2026-08-22 235646.png" width="450"/> |
 
 ---
 
@@ -34,26 +34,7 @@ A comprehensive, interactive multi-page Power BI dashboard designed with an auth
 ## 🛠️ Data Model & DAX Measures
 
 ### Key DAX Measures Used:
+
 * **Total Chart Entries:**
 ```dax
 Total Chart Entries = COUNTROWS(fact_chart_entries)
-
-
-Explicit Content Percentage:
-Pct Explicit = DIVIDE(CALCULATE(COUNTROWS(fact_chart_entries), dim_songs[is_explicit] = TRUE()), COUNTROWS(fact_chart_entries))
-
-Singles Ratio:
-Pct Singles = DIVIDE(CALCULATE(COUNTROWS(fact_chart_entries), dim_songs[album_type] = "single"), COUNTROWS(fact_chart_entries))
-
-Days to No.1 Peak:
-Days to No1 = 
-VAR ReleaseDate = MIN(dim_songs[release_date_cleaned])
-VAR First1Date = CALCULATE(MIN(fact_chart_entries[date]), fact_chart_entries[position] = 1)
-RETURN IF(ISBLANK(First1Date), BLANK(), DATEDIFF(ReleaseDate, First1Date, DAY))
-
-💻 Tech Stack
-Business Intelligence: Microsoft Power BI Desktop
-
-Language: DAX (Data Analysis Expressions), Python
-
-Design & UI: Figma Custom UI Template
